@@ -1,0 +1,1222 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#DC2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="LifeInvader">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>LifeInvader - Organização Pessoal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Configuração do Tailwind para Dark Mode e Fontes -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Esconder barra de rolagem nas abas horizontais mantendo funcionalidade */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Animações suaves */
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+
+        /* Ajuste para toque rápido em dispositivos móveis */
+        button, input, textarea, select {
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body class="bg-slate-200 dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200">
+
+    <!-- Container Principal Estilo App Mobile (Centralizado no Desktop, Tela Cheia no Celular) -->
+    <div id="app-shell" class="mx-auto max-w-md min-h-screen bg-slate-50 dark:bg-slate-900 shadow-2xl relative flex flex-col overflow-x-hidden border-x border-slate-200/80 dark:border-slate-800">
+        
+        <!-- Cabeçalho Fixo (Top Bar) -->
+        <header class="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/70 dark:border-slate-800 px-4 pt-4 pb-3">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-md shadow-red-600/25">
+                        <i data-lucide="zap" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <h1 class="font-display font-extrabold text-lg leading-tight tracking-tight text-slate-900 dark:text-white">
+                                Life<span class="text-red-600 dark:text-red-500">Invader</span>
+                            </h1>
+                            <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400">OS</span>
+                        </div>
+                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400" id="notes-counter">Carregando notas...</p>
+                    </div>
+                </div>
+
+                <!-- Ações Rápidas do Cabeçalho -->
+                <div class="flex items-center gap-1.5">
+                    <button onclick="openBackupModal()" title="Backup e Exportação" class="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition active:scale-95">
+                        <i data-lucide="download-cloud" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="openHelpModal()" title="Instalar no Celular" class="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition active:scale-95">
+                        <i data-lucide="smartphone" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="toggleTheme()" title="Alternar Tema" class="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition active:scale-95">
+                        <i id="theme-icon" data-lucide="moon" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Barra de Pesquisa em Tempo Real -->
+            <div class="relative mb-3">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Buscar títulos, tarefas ou ideias..." 
+                    oninput="handleSearch(this.value)"
+                    class="w-full pl-10 pr-9 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-500 transition"
+                >
+                <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i data-lucide="x-circle" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Abas Horizontais de Âmbitos (Categorias) -->
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1" id="category-tabs">
+                <!-- Preenchido via JavaScript -->
+            </div>
+        </header>
+
+        <!-- Área Principal de Lista de Notas -->
+        <main class="flex-1 px-4 pt-4 pb-28 space-y-5" id="notes-container">
+            <!-- Seção Fixadas -->
+            <div id="pinned-section" class="hidden space-y-2.5">
+                <div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                    <i data-lucide="pin" class="w-3.5 h-3.5 text-red-500"></i>
+                    <span>Fixadas no topo</span>
+                </div>
+                <div id="pinned-notes-list" class="space-y-3"></div>
+            </div>
+
+            <!-- Seção Geral -->
+            <div id="regular-section" class="space-y-2.5">
+                <div id="regular-header" class="hidden flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+                    <span>Outras anotações</span>
+                </div>
+                <div id="regular-notes-list" class="space-y-3"></div>
+            </div>
+
+            <!-- Estado Vazio -->
+            <div id="empty-state" class="hidden flex flex-col items-center justify-center text-center py-14 px-6">
+                <div class="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/50 text-red-500 flex items-center justify-center mb-4">
+                    <i data-lucide="notebook-pen" class="w-8 h-8"></i>
+                </div>
+                <h3 class="font-display font-bold text-base text-slate-800 dark:text-slate-100 mb-1">Nenhuma anotação por aqui</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 max-w-xs mb-5">Invada sua rotina! Crie uma nova nota neste âmbito tocando no botão "+" abaixo.</p>
+                <button onclick="openNoteModal()" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-xl shadow-sm transition active:scale-95">
+                    Criar primeira nota
+                </button>
+            </div>
+        </main>
+
+        <!-- Botão Flutuante (FAB) para Nova Nota -->
+        <div class="fixed bottom-6 right-5 md:right-[calc(50%-12.5rem)] z-30">
+            <button 
+                onclick="openNoteModal()" 
+                aria-label="Nova Anotação"
+                class="w-14 h-14 rounded-2xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/30 flex items-center justify-center transition-transform active:scale-90 hover:scale-105"
+            >
+                <i data-lucide="plus" class="w-7 h-7"></i>
+            </button>
+        </div>
+
+        <!-- Toast / Notificação Flutuante -->
+        <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform translate-y-2">
+            <div class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-medium px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 dark:text-emerald-600"></i>
+                <span id="toast-message">Ação concluída</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: CRIAR / EDITAR ANOTAÇÃO             -->
+    <!-- ========================================== -->
+    <div id="note-modal" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col animate-slide-up">
+            
+            <!-- Topo do Modal -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+                <button onclick="closeNoteModal()" class="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white px-2 py-1 rounded-lg">
+                    Cancelar
+                </button>
+                <span id="modal-title" class="font-display font-bold text-sm text-slate-800 dark:text-white">Nova Anotação</span>
+                <button onclick="saveNote()" class="text-sm font-semibold bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-xl shadow-xs transition active:scale-95">
+                    Salvar
+                </button>
+            </div>
+
+            <!-- Corpo do Formulário -->
+            <div class="p-5 overflow-y-auto space-y-4 flex-1">
+                <input type="hidden" id="note-id">
+
+                <!-- Seletor de Âmbito (Categoria) -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Âmbito da Vida</label>
+                    <div id="modal-category-selector" class="flex flex-wrap gap-2">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+                <!-- Título -->
+                <div>
+                    <input 
+                        type="text" 
+                        id="note-title-input" 
+                        placeholder="Título da anotação..." 
+                        class="w-full font-display font-bold text-lg bg-transparent border-b border-slate-200 dark:border-slate-800 pb-2 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-red-500"
+                    >
+                </div>
+
+                <!-- Barra de Ferramentas Rápidas de Texto -->
+                <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-xl">
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="insertTemplate('- [ ] ')" title="Adicionar Tarefa/Checklist" class="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition">
+                            <i data-lucide="check-square" class="w-3.5 h-3.5 text-red-500"></i>
+                            <span>Checklist</span>
+                        </button>
+                        <button type="button" onclick="insertTemplate('• ')" title="Adicionar Tópico" class="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition">
+                            <i data-lucide="list" class="w-3.5 h-3.5 text-emerald-500"></i>
+                            <span>Tópico</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Botão Fixar -->
+                    <button type="button" id="modal-pin-btn" onclick="toggleModalPin()" class="flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg transition text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700">
+                        <i data-lucide="pin" class="w-3.5 h-3.5"></i>
+                        <span id="modal-pin-label">Fixar</span>
+                    </button>
+                </div>
+
+                <!-- Conteúdo da Nota -->
+                <div>
+                    <textarea 
+                        id="note-content-input" 
+                        rows="7" 
+                        placeholder="Escreva seus pensamentos, listas de pedidos, matérias da faculdade ou dicas de lazer...&#10;&#10;Dica: Use '- [ ] ' para criar caixinhas clicáveis!" 
+                        class="w-full text-sm leading-relaxed bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/40 resize-none"
+                    ></textarea>
+                </div>
+
+                <!-- Destaque / Prioridade -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Cor de Destaque (Opcional)</label>
+                    <div class="flex items-center gap-3" id="color-accent-selector">
+                        <button type="button" onclick="selectAccent('none')" data-accent="none" class="accent-btn w-7 h-7 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 text-xs">✕</button>
+                        <button type="button" onclick="selectAccent('amber')" data-accent="amber" class="accent-btn w-7 h-7 rounded-full bg-amber-400"></button>
+                        <button type="button" onclick="selectAccent('emerald')" data-accent="emerald" class="accent-btn w-7 h-7 rounded-full bg-emerald-500"></button>
+                        <button type="button" onclick="selectAccent('indigo')" data-accent="indigo" class="accent-btn w-7 h-7 rounded-full bg-indigo-500"></button>
+                        <button type="button" onclick="selectAccent('rose')" data-accent="rose" class="accent-btn w-7 h-7 rounded-full bg-rose-500"></button>
+                        <button type="button" onclick="selectAccent('purple')" data-accent="purple" class="accent-btn w-7 h-7 rounded-full bg-purple-500"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: NOVO ÂMBITO (CATEGORIA PERSONALIZADA)-->
+    <!-- ========================================== -->
+    <div id="category-modal" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-5 animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">Novo Âmbito da Vida</h3>
+                <button onclick="closeCategoryModal()" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Nome do âmbito (ex: Finanças, Saúde, Casa)</label>
+                    <input type="text" id="new-category-name" maxlength="18" placeholder="Digite o nome..." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Escolha uma cor</label>
+                    <div class="flex gap-2.5" id="new-cat-colors">
+                        <button type="button" onclick="selectCatColor('emerald')" data-cat-color="emerald" class="cat-color-btn w-8 h-8 rounded-xl bg-emerald-500 ring-2 ring-offset-2 ring-emerald-500 dark:ring-offset-slate-900"></button>
+                        <button type="button" onclick="selectCatColor('sky')" data-cat-color="sky" class="cat-color-btn w-8 h-8 rounded-xl bg-sky-500"></button>
+                        <button type="button" onclick="selectCatColor('violet')" data-cat-color="violet" class="cat-color-btn w-8 h-8 rounded-xl bg-violet-500"></button>
+                        <button type="button" onclick="selectCatColor('pink')" data-cat-color="pink" class="cat-color-btn w-8 h-8 rounded-xl bg-pink-500"></button>
+                        <button type="button" onclick="selectCatColor('orange')" data-cat-color="orange" class="cat-color-btn w-8 h-8 rounded-xl bg-orange-500"></button>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex gap-2">
+                    <button onclick="closeCategoryModal()" class="flex-1 py-2.5 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Cancelar</button>
+                    <button onclick="createNewCategory()" class="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-700 text-white shadow-sm">Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: BACKUP & EXPORTAÇÃO                 -->
+    <!-- ========================================== -->
+    <div id="backup-modal" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-5 animate-fade-in">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">Segurança e Backup</h3>
+                <button onclick="closeBackupModal()" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                Suas notas ficam salvas diretamente na memória deste navegador. Baixe uma cópia de segurança regularmente ou restaure um arquivo anterior.
+            </p>
+            
+            <div class="space-y-2.5">
+                <button onclick="exportBackupJSON()" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 transition">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="file-json" class="w-5 h-5"></i>
+                        <div class="text-left">
+                            <div class="text-sm font-semibold">Baixar Backup (.JSON)</div>
+                            <div class="text-[11px] opacity-80">Ideal para restaurar no app depois</div>
+                        </div>
+                    </div>
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                </button>
+
+                <button onclick="exportBackupTXT()" class="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-slate-700 transition">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="file-text" class="w-5 h-5 text-emerald-500"></i>
+                        <div class="text-left">
+                            <div class="text-sm font-semibold">Exportar Texto (.TXT)</div>
+                            <div class="text-[11px] opacity-75">Fácil de ler ou enviar no WhatsApp</div>
+                        </div>
+                    </div>
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                </button>
+
+                <label class="w-full flex items-center justify-between p-3.5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="upload" class="w-5 h-5 text-amber-500"></i>
+                        <div class="text-left">
+                            <div class="text-sm font-semibold">Restaurar Backup (.JSON)</div>
+                            <div class="text-[11px] opacity-75">Importar notas salvas anteriormente</div>
+                        </div>
+                    </div>
+                    <input type="file" accept=".json" onchange="importBackupJSON(event)" class="hidden">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: COMO USAR COMO APP NO CELULAR       -->
+    <!-- ========================================== -->
+    <div id="help-modal" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-5 animate-fade-in">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="smartphone" class="w-5 h-5 text-red-500"></i>
+                    <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">Instalar LifeInvader no Celular</h3>
+                </div>
+                <button onclick="closeHelpModal()" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p>O <strong>LifeInvader</strong> foi criado para funcionar em tela cheia direto no seu smartphone sem precisar de loja de aplicativos:</p>
+                
+                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 space-y-1.5">
+                    <div class="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                        <span>🤖 Android (Chrome)</span>
+                    </div>
+                    <p>Toque nos <strong>3 pontinhos (⋮)</strong> no canto superior direito do navegador e selecione <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar aplicativo"</strong>.</p>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 space-y-1.5">
+                    <div class="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                        <span>🍎 iPhone (Safari)</span>
+                    </div>
+                    <p>Toque no ícone de <strong>Compartilhar (quadrado com seta para cima)</strong> na barra inferior e escolha <strong>"Adicionar à Tela de Início"</strong>.</p>
+                </div>
+            </div>
+
+            <button onclick="closeHelpModal()" class="w-full mt-4 py-2.5 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-700 text-white">Entendi!</button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL: CONFIRMAÇÃO DE EXCLUSÃO             -->
+    <!-- ========================================== -->
+    <div id="delete-modal" class="fixed inset-0 z-50 hidden bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-xs rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-5 text-center animate-fade-in">
+            <div class="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="trash-2" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-display font-bold text-base text-slate-900 dark:text-white mb-1">Excluir anotação?</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">Essa ação não poderá ser desfeita.</p>
+            <div class="flex gap-2">
+                <button onclick="closeDeleteModal()" class="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Cancelar</button>
+                <button id="confirm-delete-btn" class="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- LÓGICA DO APLICATIVO (JAVASCRIPT)          -->
+    <!-- ========================================== -->
+    <script>
+        // Chaves de Armazenamento Local
+        const STORAGE_KEYS = {
+            NOTES: 'lifeinvader_notes_v1',
+            CATEGORIES: 'lifeinvader_categories_v1',
+            THEME: 'lifeinvader_theme_v1'
+        };
+
+        // Categorias Padrão (Âmbitos da Vida)
+        const DEFAULT_CATEGORIES = [
+            { id: 'trabalho', name: 'Trabalho', color: 'amber', icon: 'briefcase' },
+            { id: 'faculdade', name: 'Faculdade', color: 'indigo', icon: 'graduation-cap' },
+            { id: 'lazer', name: 'Lazer', color: 'rose', icon: 'sparkles' }
+        ];
+
+        // Notas de Exemplo Iniciais (Contexto realista em Português)
+        const SAMPLE_NOTES = [
+            {
+                id: 'note-1',
+                title: 'Produção & Encomendas da Semana',
+                category: 'trabalho',
+                content: '- [x] Conferir estoque de embalagens e fitas\n- [ ] Separar ingredientes para os bolos de sexta\n- [ ] Responder orçamentos pendentes no WhatsApp\n• Testar nova cobertura cremosa de chocolate meio amargo',
+                pinned: true,
+                accent: 'amber',
+                updatedAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
+            },
+            {
+                id: 'note-2',
+                title: 'Cronograma de Estudos - Semestre',
+                category: 'faculdade',
+                content: '- [ ] Ler capítulo 3 de Linguística Aplicada\n- [ ] Resumir tópicos de Literatura Portuguesa para a prova\n- [ ] Entregar atividade avaliativa no portal antes de domingo',
+                pinned: false,
+                accent: 'indigo',
+                updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString()
+            },
+            {
+                id: 'note-3',
+                title: 'Lista de Filmes, Séries & Receitas',
+                category: 'lazer',
+                content: '• Assistir o novo filme de suspense no fim de semana\n• Testar receita de pão de queijo na airfryer\n- [ ] Separar playlist relaxante para leitura à noite',
+                pinned: false,
+                accent: 'rose',
+                updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
+            }
+        ];
+
+        // Mapa de Cores para Badges e Bordas
+        const COLOR_STYLES = {
+            amber: {
+                badge: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-200 dark:border-amber-800/50',
+                dot: 'bg-amber-500',
+                accentBorder: 'border-l-4 border-l-amber-400'
+            },
+            indigo: {
+                badge: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/50',
+                dot: 'bg-indigo-500',
+                accentBorder: 'border-l-4 border-l-indigo-500'
+            },
+            rose: {
+                badge: 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-200 dark:border-rose-800/50',
+                dot: 'bg-rose-500',
+                accentBorder: 'border-l-4 border-l-rose-500'
+            },
+            emerald: {
+                badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50',
+                dot: 'bg-emerald-500',
+                accentBorder: 'border-l-4 border-l-emerald-500'
+            },
+            sky: {
+                badge: 'bg-sky-100 text-sky-800 dark:bg-sky-950/70 dark:text-sky-300 border-sky-200 dark:border-sky-800/50',
+                dot: 'bg-sky-500',
+                accentBorder: 'border-l-4 border-l-sky-500'
+            },
+            violet: {
+                badge: 'bg-violet-100 text-violet-800 dark:bg-violet-950/70 dark:text-violet-300 border-violet-200 dark:border-violet-800/50',
+                dot: 'bg-violet-500',
+                accentBorder: 'border-l-4 border-l-violet-500'
+            },
+            purple: {
+                badge: 'bg-purple-100 text-purple-800 dark:bg-purple-950/70 dark:text-purple-300 border-purple-200 dark:border-purple-800/50',
+                dot: 'bg-purple-500',
+                accentBorder: 'border-l-4 border-l-purple-500'
+            },
+            pink: {
+                badge: 'bg-pink-100 text-pink-800 dark:bg-pink-950/70 dark:text-pink-300 border-pink-200 dark:border-pink-800/50',
+                dot: 'bg-pink-500',
+                accentBorder: 'border-l-4 border-l-pink-500'
+            },
+            orange: {
+                badge: 'bg-orange-100 text-orange-800 dark:bg-orange-950/70 dark:text-orange-300 border-orange-200 dark:border-orange-800/50',
+                dot: 'bg-orange-500',
+                accentBorder: 'border-l-4 border-l-orange-500'
+            }
+        };
+
+        // Estado da Aplicação
+        let state = {
+            notes: [],
+            categories: [],
+            activeCategory: 'tudo',
+            searchQuery: '',
+            modalSelectedCategory: 'trabalho',
+            modalPinned: false,
+            modalAccent: 'none',
+            newCatColor: 'emerald',
+            noteToDeleteId: null
+        };
+
+        // Inicialização ao carregar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadData();
+            renderCategoryTabs();
+            renderNotes();
+            lucide.createIcons();
+        });
+
+        // Gerenciamento de Tema (Claro / Escuro)
+        function initTheme() {
+            const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+                updateThemeIcon(true);
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateThemeIcon(false);
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('theme-icon');
+            icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+        }
+
+        // Carregar e Salvar Dados no LocalStorage
+        function loadData() {
+            try {
+                const storedCategories = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+                state.categories = storedCategories ? JSON.parse(storedCategories) : [...DEFAULT_CATEGORIES];
+
+                const storedNotes = localStorage.getItem(STORAGE_KEYS.NOTES);
+                if (storedNotes) {
+                    state.notes = JSON.parse(storedNotes);
+                } else {
+                    state.notes = [...SAMPLE_NOTES];
+                    saveData();
+                }
+            } catch (e) {
+                console.error('Erro ao carregar dados:', e);
+                state.categories = [...DEFAULT_CATEGORIES];
+                state.notes = [...SAMPLE_NOTES];
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(state.notes));
+                localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(state.categories));
+            } catch (e) {
+                showToast('Erro ao salvar no dispositivo');
+            }
+        }
+
+        // Renderizar Abas de Categorias no Topo
+        function renderCategoryTabs() {
+            const container = document.getElementById('category-tabs');
+            
+            // Aba "Tudo"
+            const isAllActive = state.activeCategory === 'tudo';
+            let html = `
+                <button 
+                    onclick="selectCategory('tudo')" 
+                    class="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
+                        isAllActive 
+                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm' 
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    }"
+                >
+                    <span>Tudo</span>
+                    <span class="px-1.5 py-0.2 rounded-md text-[10px] ${isAllActive ? 'bg-white/20 dark:bg-slate-900/15' : 'bg-slate-100 dark:bg-slate-700'}">${state.notes.length}</span>
+                </button>
+            `;
+
+            // Abas dos Âmbitos
+            state.categories.forEach(cat => {
+                const isActive = state.activeCategory === cat.id;
+                const count = state.notes.filter(n => n.category === cat.id).length;
+                const colorDot = COLOR_STYLES[cat.color]?.dot || 'bg-red-500';
+
+                html += `
+                    <button 
+                        onclick="selectCategory('${cat.id}')" 
+                        class="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 ${
+                            isActive 
+                            ? 'bg-red-600 text-white shadow-sm shadow-red-600/20' 
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                        }"
+                    >
+                        <span class="w-2 h-2 rounded-full ${isActive ? 'bg-white' : colorDot}"></span>
+                        <span>${escapeHTML(cat.name)}</span>
+                        <span class="px-1.5 py-0.2 rounded-md text-[10px] ${isActive ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-700'}">${count}</span>
+                    </button>
+                `;
+            });
+
+            // Botão "+" para Novo Âmbito
+            html += `
+                <button 
+                    onclick="openCategoryModal()" 
+                    title="Criar novo âmbito"
+                    class="shrink-0 flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:border-red-400 transition active:scale-95"
+                >
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>Novo</span>
+                </button>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function selectCategory(catId) {
+            state.activeCategory = catId;
+            renderCategoryTabs();
+            renderNotes();
+        }
+
+        // Pesquisa em Tempo Real
+        function handleSearch(val) {
+            state.searchQuery = val.trim().toLowerCase();
+            const clearBtn = document.getElementById('clear-search-btn');
+            clearBtn.classList.toggle('hidden', state.searchQuery.length === 0);
+            renderNotes();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('search-input');
+            input.value = '';
+            handleSearch('');
+            input.focus();
+        }
+
+        // Renderizar Cards de Anotações
+        function renderNotes() {
+            const pinnedSection = document.getElementById('pinned-section');
+            const pinnedList = document.getElementById('pinned-notes-list');
+            const regularHeader = document.getElementById('regular-header');
+            const regularList = document.getElementById('regular-notes-list');
+            const emptyState = document.getElementById('empty-state');
+            const counterEl = document.getElementById('notes-counter');
+
+            // Filtrar notas por categoria e termo de busca
+            let filtered = state.notes.filter(note => {
+                const matchesCat = state.activeCategory === 'tudo' || note.category === state.activeCategory;
+                const matchesSearch = !state.searchQuery || 
+                    note.title.toLowerCase().includes(state.searchQuery) || 
+                    note.content.toLowerCase().includes(state.searchQuery);
+                return matchesCat && matchesSearch;
+            });
+
+            // Ordenar por mais recentes
+            filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+            // Atualizar contador no topo
+            const totalText = filtered.length === 1 ? '1 anotação' : `${filtered.length} anotações`;
+            counterEl.textContent = state.activeCategory === 'tudo' 
+                ? `${totalText} no total` 
+                : `${totalText} neste âmbito`;
+
+            if (filtered.length === 0) {
+                pinnedSection.classList.add('hidden');
+                regularHeader.classList.add('hidden');
+                regularList.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            const pinnedNotes = filtered.filter(n => n.pinned);
+            const regularNotes = filtered.filter(n => !n.pinned);
+
+            // Renderizar Fixadas
+            if (pinnedNotes.length > 0) {
+                pinnedSection.classList.remove('hidden');
+                pinnedList.innerHTML = pinnedNotes.map(note => createNoteCardHTML(note)).join('');
+            } else {
+                pinnedSection.classList.add('hidden');
+                pinnedList.innerHTML = '';
+            }
+
+            // Renderizar Normais
+            if (regularNotes.length > 0) {
+                regularHeader.classList.toggle('hidden', pinnedNotes.length === 0);
+                regularList.innerHTML = regularNotes.map(note => createNoteCardHTML(note)).join('');
+            } else {
+                regularHeader.classList.add('hidden');
+                regularList.innerHTML = '';
+            }
+
+            lucide.createIcons();
+        }
+
+        // Construir HTML de cada Card de Nota (com suporte a Checklist interativo)
+        function createNoteCardHTML(note) {
+            const categoryObj = state.categories.find(c => c.id === note.category) || { name: 'Geral', color: 'indigo' };
+            const badgeStyle = COLOR_STYLES[categoryObj.color]?.badge || COLOR_STYLES.indigo.badge;
+            const accentStyle = (note.accent && note.accent !== 'none' && COLOR_STYLES[note.accent]) 
+                ? COLOR_STYLES[note.accent].accentBorder 
+                : '';
+
+            const formattedContent = formatNoteContent(note.content, note.id);
+            const timeAgo = formatRelativeDate(note.updatedAt);
+
+            return `
+                <article class="group bg-white dark:bg-slate-800/90 rounded-2xl p-4 shadow-xs border border-slate-200/80 dark:border-slate-700/80 hover:border-red-300 dark:hover:border-red-800 transition-all ${accentStyle}">
+                    <!-- Cabeçalho do Card -->
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-semibold border ${badgeStyle}">
+                            ${escapeHTML(categoryObj.name)}
+                        </span>
+                        
+                        <!-- Botões de Ação Rápida -->
+                        <div class="flex items-center gap-1">
+                            <button 
+                                onclick="togglePinNote('${note.id}')" 
+                                title="${note.pinned ? 'Desafixar' : 'Fixar no topo'}"
+                                class="p-1.5 rounded-lg transition ${note.pinned ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'}"
+                            >
+                                <i data-lucide="pin" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button 
+                                onclick="openNoteModal('${note.id}')" 
+                                title="Editar nota"
+                                class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                            >
+                                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button 
+                                onclick="confirmDeleteNote('${note.id}')" 
+                                title="Excluir nota"
+                                class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                            >
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Título Clicável para Edição -->
+                    <h2 onclick="openNoteModal('${note.id}')" class="font-display font-bold text-base text-slate-900 dark:text-white mb-2 cursor-pointer leading-snug">
+                        ${escapeHTML(note.title || 'Sem título')}
+                    </h2>
+
+                    <!-- Conteúdo Formatado (Texto + Checklists Clicáveis) -->
+                    <div class="text-sm text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed break-words">
+                        ${formattedContent}
+                    </div>
+
+                    <!-- Rodapé do Card -->
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-[11px] text-slate-400">
+                        <span>Atualizado ${timeAgo}</span>
+                        <button onclick="openNoteModal('${note.id}')" class="font-medium text-red-600 dark:text-red-400 hover:underline">
+                            Abrir nota
+                        </button>
+                    </div>
+                </article>
+            `;
+        }
+
+        // Formatar linhas com suporte interativo para "- [ ] " e "- [x] "
+        function formatNoteContent(text, noteId) {
+            if (!text) return '<p class="italic text-slate-400">Nota vazia</p>';
+            
+            const lines = text.split('\n');
+            return lines.map((line, index) => {
+                const uncheckedMatch = line.match(/^\s*-\s*\[\s*\]\s*(.*)$/);
+                const checkedMatch = line.match(/^\s*-\s*\[[xX]\]\s*(.*)$/);
+
+                if (uncheckedMatch) {
+                    return `
+                        <div onclick="toggleChecklistItem('${noteId}', ${index})" class="flex items-start gap-2 cursor-pointer py-0.5 hover:text-slate-900 dark:hover:text-white select-none">
+                            <span class="mt-0.5 w-4 h-4 rounded border border-slate-300 dark:border-slate-600 flex items-center justify-center shrink-0 bg-slate-50 dark:bg-slate-900"></span>
+                            <span>${escapeHTML(uncheckedMatch[1])}</span>
+                        </div>
+                    `;
+                }
+                if (checkedMatch) {
+                    return `
+                        <div onclick="toggleChecklistItem('${noteId}', ${index})" class="flex items-start gap-2 cursor-pointer py-0.5 text-slate-400 dark:text-slate-500 line-through select-none">
+                            <span class="mt-0.5 w-4 h-4 rounded bg-emerald-500 text-white flex items-center justify-center shrink-0 text-[10px]">✓</span>
+                            <span>${escapeHTML(checkedMatch[1])}</span>
+                        </div>
+                    `;
+                }
+                if (line.trim() === '') {
+                    return '<div class="h-1.5"></div>';
+                }
+                return `<p>${escapeHTML(line)}</p>`;
+            }).join('');
+        }
+
+        // Alternar Checkbox diretamente no card da lista
+        function toggleChecklistItem(noteId, lineIndex) {
+            const noteIndex = state.notes.findIndex(n => n.id === noteId);
+            if (noteIndex === -1) return;
+
+            const lines = state.notes[noteIndex].content.split('\n');
+            const line = lines[lineIndex];
+            if (!line) return;
+
+            if (/^\s*-\s*\[\s*\]/.test(line)) {
+                lines[lineIndex] = line.replace(/^\s*-\s*\[\s*\]/, '- [x]');
+            } else if (/^\s*-\s*\[[xX]\]/.test(line)) {
+                lines[lineIndex] = line.replace(/^\s*-\s*\[[xX]\]/, '- [ ]');
+            }
+
+            state.notes[noteIndex].content = lines.join('\n');
+            state.notes[noteIndex].updatedAt = new Date().toISOString();
+            saveData();
+            renderNotes();
+        }
+
+        // Fixar / Desafixar Nota
+        function togglePinNote(noteId) {
+            const note = state.notes.find(n => n.id === noteId);
+            if (!note) return;
+            note.pinned = !note.pinned;
+            saveData();
+            renderNotes();
+            showToast(note.pinned ? 'Nota fixada no topo' : 'Nota desafixada');
+        }
+
+        // ==========================================
+        // MODAL DE CRIAÇÃO E EDIÇÃO DE NOTAS
+        // ==========================================
+        function openNoteModal(noteId = null) {
+            const modal = document.getElementById('note-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const idInput = document.getElementById('note-id');
+            const titleInput = document.getElementById('note-title-input');
+            const contentInput = document.getElementById('note-content-input');
+
+            if (noteId) {
+                const note = state.notes.find(n => n.id === noteId);
+                if (!note) return;
+                modalTitle.textContent = 'Editar Anotação';
+                idInput.value = note.id;
+                titleInput.value = note.title;
+                contentInput.value = note.content;
+                state.modalSelectedCategory = note.category;
+                state.modalPinned = note.pinned;
+                state.modalAccent = note.accent || 'none';
+            } else {
+                modalTitle.textContent = 'Nova Anotação';
+                idInput.value = '';
+                titleInput.value = '';
+                contentInput.value = '';
+                state.modalSelectedCategory = state.activeCategory !== 'tudo' 
+                    ? state.activeCategory 
+                    : (state.categories[0]?.id || 'trabalho');
+                state.modalPinned = false;
+                state.modalAccent = 'none';
+            }
+
+            renderModalCategories();
+            updateModalPinUI();
+            selectAccent(state.modalAccent);
+            modal.classList.remove('hidden');
+            setTimeout(() => titleInput.focus(), 100);
+        }
+
+        function closeNoteModal() {
+            document.getElementById('note-modal').classList.add('hidden');
+        }
+
+        function renderModalCategories() {
+            const container = document.getElementById('modal-category-selector');
+            container.innerHTML = state.categories.map(cat => {
+                const isSelected = state.modalSelectedCategory === cat.id;
+                const dotColor = COLOR_STYLES[cat.color]?.dot || 'bg-red-500';
+                return `
+                    <button 
+                        type="button" 
+                        onclick="selectModalCategory('${cat.id}')"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
+                            isSelected 
+                            ? 'bg-red-600 text-white border-red-600 shadow-xs' 
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }"
+                    >
+                        <span class="w-2 h-2 rounded-full ${isSelected ? 'bg-white' : dotColor}"></span>
+                        <span>${escapeHTML(cat.name)}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectModalCategory(catId) {
+            state.modalSelectedCategory = catId;
+            renderModalCategories();
+        }
+
+        function toggleModalPin() {
+            state.modalPinned = !state.modalPinned;
+            updateModalPinUI();
+        }
+
+        function updateModalPinUI() {
+            const btn = document.getElementById('modal-pin-btn');
+            const label = document.getElementById('modal-pin-label');
+            if (state.modalPinned) {
+                btn.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-950', 'dark:text-red-300');
+                label.textContent = 'Fixada';
+            } else {
+                btn.classList.remove('bg-red-100', 'text-red-700', 'dark:bg-red-950', 'dark:text-red-300');
+                label.textContent = 'Fixar';
+            }
+        }
+
+        function selectAccent(accent) {
+            state.modalAccent = accent;
+            document.querySelectorAll('.accent-btn').forEach(btn => {
+                const isMatch = btn.getAttribute('data-accent') === accent;
+                btn.classList.toggle('ring-2', isMatch);
+                btn.classList.toggle('ring-offset-2', isMatch);
+                btn.classList.toggle('ring-red-500', isMatch);
+                btn.classList.toggle('dark:ring-offset-slate-900', isMatch);
+            });
+        }
+
+        function insertTemplate(prefix) {
+            const textarea = document.getElementById('note-content-input');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const needsNewline = start > 0 && text[start - 1] !== '\n';
+            const insertion = (needsNewline ? '\n' : '') + prefix;
+
+            textarea.value = text.substring(0, start) + insertion + text.substring(end);
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = start + insertion.length;
+        }
+
+        function saveNote() {
+            const id = document.getElementById('note-id').value;
+            const title = document.getElementById('note-title-input').value.trim();
+            const content = document.getElementById('note-content-input').value.trim();
+
+            if (!title && !content) {
+                showToast('Escreva um título ou conteúdo antes de salvar');
+                return;
+            }
+
+            const now = new Date().toISOString();
+
+            if (id) {
+                const index = state.notes.findIndex(n => n.id === id);
+                if (index !== -1) {
+                    state.notes[index] = {
+                        ...state.notes[index],
+                        title: title || 'Nota sem título',
+                        content,
+                        category: state.modalSelectedCategory,
+                        pinned: state.modalPinned,
+                        accent: state.modalAccent,
+                        updatedAt: now
+                    };
+                }
+                showToast('Anotação atualizada!');
+            } else {
+                const newNote = {
+                    id: 'note-' + Date.now(),
+                    title: title || 'Nota sem título',
+                    content,
+                    category: state.modalSelectedCategory,
+                    pinned: state.modalPinned,
+                    accent: state.modalAccent,
+                    updatedAt: now
+                };
+                state.notes.unshift(newNote);
+                showToast('Nova anotação criada!');
+            }
+
+            saveData();
+            renderCategoryTabs();
+            renderNotes();
+            closeNoteModal();
+        }
+
+        // ==========================================
+        // EXCLUSÃO DE NOTAS
+        // ==========================================
+        function confirmDeleteNote(noteId) {
+            state.noteToDeleteId = noteId;
+            const modal = document.getElementById('delete-modal');
+            const confirmBtn = document.getElementById('confirm-delete-btn');
+            
+            confirmBtn.onclick = () => {
+                state.notes = state.notes.filter(n => n.id !== state.noteToDeleteId);
+                saveData();
+                renderCategoryTabs();
+                renderNotes();
+                closeDeleteModal();
+                showToast('Anotação excluída');
+            };
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.add('hidden');
+            state.noteToDeleteId = null;
+        }
+
+        // ==========================================
+        // NOVO ÂMBITO (CATEGORIA)
+        // ==========================================
+        function openCategoryModal() {
+            document.getElementById('new-category-name').value = '';
+            selectCatColor('emerald');
+            document.getElementById('category-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('new-category-name').focus(), 100);
+        }
+
+        function closeCategoryModal() {
+            document.getElementById('category-modal').classList.add('hidden');
+        }
+
+        function selectCatColor(color) {
+            state.newCatColor = color;
+            document.querySelectorAll('.cat-color-btn').forEach(btn => {
+                const isSelected = btn.getAttribute('data-cat-color') === color;
+                btn.classList.toggle('ring-2', isSelected);
+                btn.classList.toggle('ring-offset-2', isSelected);
+                btn.classList.toggle('ring-red-500', isSelected);
+                btn.classList.toggle('dark:ring-offset-slate-900', isSelected);
+            });
+        }
+
+        function createNewCategory() {
+            const nameInput = document.getElementById('new-category-name');
+            const name = nameInput.value.trim();
+
+            if (!name) {
+                showToast('Digite um nome para o âmbito');
+                return;
+            }
+
+            const slug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-4);
+
+            state.categories.push({
+                id: slug,
+                name: name,
+                color: state.newCatColor,
+                icon: 'folder'
+            });
+
+            saveData();
+            state.activeCategory = slug;
+            renderCategoryTabs();
+            renderNotes();
+            closeCategoryModal();
+            showToast(`Âmbito "${name}" criado!`);
+        }
+
+        // ==========================================
+        // BACKUP, EXPORTAÇÃO E IMPORTAÇÃO
+        // ==========================================
+        function openBackupModal() {
+            document.getElementById('backup-modal').classList.remove('hidden');
+        }
+
+        function closeBackupModal() {
+            document.getElementById('backup-modal').classList.add('hidden');
+        }
+
+        function exportBackupJSON() {
+            const payload = {
+                app: 'LifeInvader',
+                exportedAt: new Date().toISOString(),
+                categories: state.categories,
+                notes: state.notes
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            triggerDownload(blob, `lifeinvader-backup-${new Date().toISOString().slice(0, 10)}.json`);
+            showToast('Backup JSON baixado!');
+        }
+
+        function exportBackupTXT() {
+            let txt = `=== LIFEINVADER - MINHAS ANOTAÇÕES ===\nExportado em: ${new Date().toLocaleString('pt-BR')}\n\n`;
+            state.notes.forEach(note => {
+                const cat = state.categories.find(c => c.id === note.category)?.name || 'Geral';
+                txt += `----------------------------------------\n`;
+                txt += `[${cat.toUpperCase()}] ${note.title}${note.pinned ? ' (FIXADA)' : ''}\n`;
+                txt += `Atualizado em: ${new Date(note.updatedAt).toLocaleString('pt-BR')}\n\n`;
+                txt += `${note.content}\n\n`;
+            });
+            const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+            triggerDownload(blob, `lifeinvader-notas-${new Date().toISOString().slice(0, 10)}.txt`);
+            showToast('Arquivo TXT exportado!');
+        }
+
+        function triggerDownload(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importBackupJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (Array.isArray(data.notes)) {
+                        state.notes = data.notes;
+                        if (Array.isArray(data.categories) && data.categories.length > 0) {
+                            state.categories = data.categories;
+                        }
+                        saveData();
+                        renderCategoryTabs();
+                        renderNotes();
+                        closeBackupModal();
+                        showToast('Backup restaurado com sucesso!');
+                    } else {
+                        showToast('Arquivo de backup inválido');
+                    }
+                } catch (err) {
+                    showToast('Erro ao ler o arquivo JSON');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // Modal de Ajuda (Instalar no Celular)
+        function openHelpModal() {
+            document.getElementById('help-modal').classList.remove('hidden');
+        }
+        function closeHelpModal() {
+            document.getElementById('help-modal').classList.add('hidden');
+        }
+
+        // ==========================================
+        // UTILITÁRIOS
+        // ==========================================
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-2');
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+            }, 2600);
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatRelativeDate(isoString) {
+            const date = new Date(isoString);
+            const diffSeconds = Math.floor((Date.now() - date.getTime()) / 1000);
+            if (diffSeconds < 60) return 'agora mesmo';
+            const diffMinutes = Math.floor(diffSeconds / 60);
+            if (diffMinutes < 60) return `há ${diffMinutes} min`;
+            const diffHours = Math.floor(diffMinutes / 60);
+            if (diffHours < 24) return `há ${diffHours}h`;
+            const diffDays = Math.floor(diffHours / 24);
+            if (diffDays === 1) return 'ontem';
+            if (diffDays < 7) return `há ${diffDays} dias`;
+            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+        }
+    </script>
+</body>
+</html>
+```
